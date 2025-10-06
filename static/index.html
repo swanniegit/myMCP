@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Server Web Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .tool-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MCP Server Web Interface</h1>
+
+        <div class="tool-section">
+            <h2>Add Two Numbers</h2>
+            <input type="number" id="addA" placeholder="Number A" value="5">
+            <input type="number" id="addB" placeholder="Number B" value="3">
+            <button onclick="callAdd()">Calculate</button>
+            <div id="addResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="tool-section">
+            <h2>Greet Someone</h2>
+            <input type="text" id="greetName" placeholder="Your name" value="World" style="width: 200px;">
+            <button onclick="callGreet()">Greet</button>
+            <div id="greetResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="tool-section">
+            <h2>Welcome Message Resource</h2>
+            <button onclick="getWelcome()">Get Welcome Message</button>
+            <div id="welcomeResult" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function callAdd() {
+            const a = parseInt(document.getElementById('addA').value);
+            const b = parseInt(document.getElementById('addB').value);
+
+            try {
+                const response = await fetch('/api/call-tool', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        tool_name: 'add',
+                        arguments: {a, b}
+                    })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('addResult');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.textContent = `Result: ${data.result}`;
+            } catch (error) {
+                showError('addResult', error.message);
+            }
+        }
+
+        async function callGreet() {
+            const name = document.getElementById('greetName').value;
+
+            try {
+                const response = await fetch('/api/call-tool', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        tool_name: 'greet',
+                        arguments: {name}
+                    })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('greetResult');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.textContent = data.result;
+            } catch (error) {
+                showError('greetResult', error.message);
+            }
+        }
+
+        async function getWelcome() {
+            try {
+                const response = await fetch('/api/get-resource', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        uri: 'greeting://welcome'
+                    })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('welcomeResult');
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result';
+                resultDiv.textContent = data.result;
+            } catch (error) {
+                showError('welcomeResult', error.message);
+            }
+        }
+
+        function showError(elementId, message) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result error';
+            resultDiv.textContent = `Error: ${message}`;
+        }
+    </script>
+</body>
+</html>
