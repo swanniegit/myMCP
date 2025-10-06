@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import asyncio
+import os
 from fastmcp.client.client import Client
 from fastmcp.client.transports import StdioTransport
 
@@ -90,3 +91,9 @@ async def shutdown_event():
     if mcp_client is not None:
         await mcp_client.__aexit__(None, None, None)
         mcp_client = None
+
+# For running directly
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
