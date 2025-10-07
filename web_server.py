@@ -24,10 +24,19 @@ async def get_mcp_client():
     """Get or create MCP client connection"""
     global mcp_client
     if mcp_client is None:
-        # Use fastmcp from PATH (works in production) or fallback to venv
-        import shutil
-        fastmcp_path = shutil.which("fastmcp") or "venv/bin/fastmcp"
-        transport = StdioTransport(fastmcp_path, ["run", "basic_server.py"])
+        # Check if we should use remote FastMCP Cloud server
+        fastmcp_url = os.getenv("FASTMCP_URL")
+
+        if fastmcp_url:
+            # Use HTTP transport for remote FastMCP Cloud
+            from fastmcp.client.transports import HttpTransport
+            transport = HttpTransport(fastmcp_url)
+        else:
+            # Use local STDIO transport
+            import shutil
+            fastmcp_path = shutil.which("fastmcp") or "venv/bin/fastmcp"
+            transport = StdioTransport(fastmcp_path, ["run", "basic_server.py"])
+
         mcp_client = Client(transport)
         await mcp_client.__aenter__()
     return mcp_client
